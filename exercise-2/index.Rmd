@@ -1,0 +1,26 @@
+---
+title: "Exercise 2"
+author: "Yubo Wang"
+date: "11/1/2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(plotly)
+```
+
+# Interactive Chart:
+This is a chart that shows the capabilities of using the Plotly API to make a chart.
+
+```{r, echo=FALSE}
+dsamp <- diamonds[sample(nrow(diamonds), 1000), ]
+qplot(carat, price, data=dsamp, colour=clarity)
+
+set.seed(100)
+d <- diamonds[sample(nrow(diamonds), 1000), ]
+
+p <- ggplot(data = d, aes(x = carat, y = price)) +
+geom_point(aes(text = paste("Clarity:", clarity)), size = 4) +
+geom_smooth(aes(colour = cut, fill = cut)) + facet_wrap(~ cut)
+```
