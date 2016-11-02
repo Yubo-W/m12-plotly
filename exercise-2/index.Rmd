@@ -1,87 +1,26 @@
 ---
-title: "A5: GitHub Report"
+title: "Exercise 2"
 author: "Yubo Wang"
+date: "11/1/2016"
 output: html_document
 ---
 
-```{r querying_data, echo=FALSE, message=FALSE}
-# Loading the required packages.
-# If required packages need to be installed, uncomment and highlight these lines of code to install, re-comment after installation:
-# install.packages("jsonlite")
-# install.packages("dplyr")
-# install.packages("knitr")
-library(jsonlite)
-library(dplyr)
+```{r setup, include=FALSE}
 library(knitr)
-
-# GitHub API key: 48bb5819c590fcc437fc15320ec6a7af26bda99a
-# Data of user is returned to us through the user.name using the GitHub API.
-# GitHub's base url.
-base.url <- "https://api.github.com/"
-
-# The username of the GitHub user.
-user.name <- "yulongtan"
-
-# The personal access token generated from GitHub.
-api.key <- "?/access_token=48bb5819c590fcc437fc15320ec6a7af26bda99a"
-
-# The returned user data from the request to GitHub.
-user.data <- fromJSON(paste0(base.url, "users/", user.name, api.key))
-
-# Getting data about the repositories of the user, setting the per_page request to 100 and the created property
-# to descending.
-user.repos <- fromJSON(paste0(user.data$repos_url, "?per_page=100", "&sort=-created", api.key))
-
-# Making the user.repos into a data frame.
-user.repos.df <- jsonlite::flatten(user.repos)
-
-# A variable storing the number of repositories returned.
-num_repos <- nrow(user.repos.df)
-
-# A variable storing the most popular repository.
-# Answer is viewable through View(most_popular).
-most_popular <- user.repos.df %>% filter(forks_count == max(forks_count)) %>% select(name)
+library(plotly)
 ```
-![User Profile Picture](`r user.data$avatar_url`)  
-Username: `r user.name`  
-Number of Repositories: `r num_repos`  
-Most Popular Repository: `r most_popular %>% select(name)`  
 
-```{r data_manipulation, echo=FALSE}
-# Making a column of the creation date of each repo.
-user.repos.df$create_date <- format(as.Date(sub("[A-Z].*[A-Z]", "", user.repos.df$created_at)),
-                                    format="%m/%d/%Y")
+# Interactive Chart:
+This is a chart that shows the capabilities of using the Plotly API to make a chart.
 
-# A more simplified table of the user's repos, only containing the most important data to show in a table.
-table.data <- user.repos.df %>% select(name, description, forks, watchers, create_date)
+```{r, echo=FALSE}
+dsamp <- diamonds[sample(nrow(diamonds), 1000), ]
+qplot(carat, price, data=dsamp, colour=clarity)
 
-# Making the column names of the table.data more user-friendly.
-table.data <- table.data %>% `colnames<-`(c("Repository Name", "Description of Repository",
-                                            "Number of Forks", "Number of Watchers", "Date Created"))
+set.seed(100)
+d <- diamonds[sample(nrow(diamonds), 1000), ]
+
+p <- ggplot(data = d, aes(x = carat, y = price)) +
+geom_point(aes(text = paste("Clarity:", clarity)), size = 4) +
+geom_smooth(aes(colour = cut, fill = cut)) + facet_wrap(~ cut)
 ```
-`r kable(table.data)`
-## A table that summarizes the table above based on the average number of forks and total number of repositories for each programming language.
-
-```{r summary, echo=FALSE}
-# Makign a summary table of the repos based on the language.
-table.data.summary <- user.repos.df %>% 
-                      group_by(language) %>% 
-                      summarize(avg_forks = mean(forks), num_repos = n()) %>% 
-                      `colnames<-`(c("Language", "Average Number of Forks", "Total Number of Repos"))
-```
-`r kable(table.data.summary)`
-## Challenge:  
-For the challenge, I drew a bar graph that shows the total number of forks for each language. This visualization shows the correlation between the amoutn of forks versus the programming language, which could lead to show which programming language this user is known for on GitHub.
-
-```{r challenge, echo=FALSE}
-# The challenge portion of the assignment that will put the repo in a visual format.
-barplot.summary <- user.repos.df %>% 
-                   group_by(language) %>% 
-                   summarize(num_fork = sum(forks))
-modified.language <- replace(barplot.summary$language, is.na(barplot.summary$language), "Other")
-barplot.summary$language <- modified.language
-barplot(barplot.summary$num_fork, main = "Number of Forks vs. Language", xlab = "Language", ylab = "Number of Forks",
-        names.arg = barplot.summary$language, border = "red", col = "red")
-```
-  
-`r barplot(barplot.summary$num_fork, main = "Number of Forks vs. Language", xlab = "Language", ylab = "Number of Forks", names.arg = barplot.summary$language, border = "red", col = "red")`  
